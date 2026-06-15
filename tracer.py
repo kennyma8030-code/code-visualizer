@@ -7,6 +7,7 @@ import json
 
 m = sys.monitoring
 TOOL = m.PROFILER_ID
+previous_time = time.perf_counter_ns()
 
 _current = contextvars.ContextVar("trace_buffer", default=None)
 PROJECT_ROOT = os.path.abspath(os.getcwd())
@@ -44,23 +45,39 @@ class TraceRequest():
                 f.write(json.dumps(event) + "\n")
 
 
+
 def on_line(code, line_number):
-    buf = _current.get()
-    if buf is None:
+    global previous_time
+    buf = _validate(code)
+    if buf is m.DISABLE:
         return m.DISABLE
-    buf.append(("line", line_number, code.co_filename, time.perf_counter()))
+    now = time.perf_counter_ns()
+    elapsed_ns = now - previous_time
+    previous_time = now
+    buf.append(("line", line_number, code.co_filename, elapsed_ns))
 
 def on_start(code, instruction_offset):
-    buf = _current.get()
-    if buf is None:
+    global previous_time
+    buf = _validate(code)
+    if buf is m.DISABLE:
         return m.DISABLE
-    buf.append(("call", code.co_qualname, time.perf_counter()))
+    now = time.perf_counter_ns()
+    elapsed_ns = now - previous_time
+    previous_time = now
+    buf.append(("call", code.co_qualname, elapsed_ns))
 
 def on_return(code, instruction_offset, return_val):
-    buf = _current.get()
-    if buf is None:
+    buf = _validate(code)
+    if buf is m.DISABLE:
         return m.DISABLE
     buf.append(("ret", code.co_qualname, repr(return_val)[:100]))
+    
+def _validate(code):
+    buf = _current.get()
+    f = code.co_filename
+    if buf is None or not code.co_filename.startswith(PROJECT_ROOT) or f.split("\\")[-1] == "tracer.py":
+        return m.DISABLE
+    return buf
     
 def install():
     m.use_tool_id(TOOL, "tracer")

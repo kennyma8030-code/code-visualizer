@@ -1,0 +1,21 @@
+{
+  "name": "code-tracer",
+  "displayName": "Code Tracer",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "codeTracer.loadLatest", "title": "Code Tracer: Load Latest Trace" },
+      { "command": "codeTracer.stepForward", "title": "Code Tracer: Step Forward" },
+      { "command": "codeTracer.stepBack", "title": "Code Tracer: Step Back" },
+      { "command": "codeTracer.togglePlay", "title": "Code Tracer: Toggle Play" }
+    ],
+    "keybindings": [
+      { "command": "codeTracer.stepForward", "key": "cmd+alt+right" },
+      { "command": "codeTracer.stepBack", "key": "cmd+alt+left" },
+      { "command": "codeTracer.togglePlay", "key": "cmd+alt+p" }
+    ]
+  }
+}
